@@ -1,6 +1,5 @@
 pipeline {
-    agent any
-
+ agent { label 'new_agent' }  
     environment {
         BACKEND_IMAGE = "codetech-backend"
         CLIENT_IMAGE  = "codetech-client"
