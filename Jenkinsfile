@@ -4,6 +4,7 @@ pipeline {
     environment {
         BACKEND_IMAGE = "codetech-backend"
         CLIENT_IMAGE  = "codetech-client"
+        DOCKER_USER   = "arya51090"   // 👈 DockerHub ID hard-coded
     }
 
     triggers {
@@ -32,12 +33,12 @@ pipeline {
                 withCredentials([
                     usernamePassword(
                         credentialsId: 'dockerhub',
-                        usernameVariable: 'DOCKER_USER',
+                        usernameVariable: 'IGNORE_USER',
                         passwordVariable: 'DOCKER_PASS'
                     )
                 ]) {
                     sh '''
-                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    echo "$DOCKER_PASS" | docker login -u arya51090 --password-stdin
                     '''
                 }
             }
@@ -46,21 +47,13 @@ pipeline {
         stage('Push Images to DockerHub') {
             steps {
                 echo "📤 Pushing images to DockerHub"
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'dockerhub',
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )
-                ]) {
-                    sh '''
-                    docker tag codetech-backend:latest $DOCKER_USER/codetech-backend:latest
-                    docker tag codetech-client:latest  $DOCKER_USER/codetech-client:latest
+                sh '''
+                docker tag codetech-backend:latest arya51090/codetech-backend:latest
+                docker tag codetech-client:latest  arya51090/codetech-client:latest
 
-                    docker push $DOCKER_USER/codetech-backend:latest
-                    docker push $DOCKER_USER/codetech-client:latest
-                    '''
-                }
+                docker push arya51090/codetech-backend:latest
+                docker push arya51090/codetech-client:latest
+                '''
             }
         }
 
