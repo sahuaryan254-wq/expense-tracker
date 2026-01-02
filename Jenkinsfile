@@ -2,9 +2,8 @@ pipeline {
     agent any
 
     environment {
-        BACKEND_IMAGE  = "codetech-backend"
-        CLIENT_IMAGE   = "codetech-client"
-        DOCKERHUB_USER = credentials('dockerhub').username
+        BACKEND_IMAGE = "codetech-backend"
+        CLIENT_IMAGE  = "codetech-client"
     }
 
     triggers {
@@ -16,20 +15,14 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 echo "📥 Pulling code from GitHub"
-                checkout scm   // 👈 GitHub credential (ID: Github) automatically use hota hai
+                checkout scm
             }
         }
 
         stage('Build Docker Images') {
             steps {
                 echo "🐳 Building Docker images"
-                script {
-                    if (isUnix()) {
-                        sh 'docker compose build'
-                    } else {
-                        bat 'docker compose build'
-                    }
-                }
+                sh 'docker compose build'
             }
         }
 
@@ -53,7 +46,13 @@ pipeline {
         stage('Push Images to DockerHub') {
             steps {
                 echo "📤 Pushing images to DockerHub"
-                script {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
                     sh '''
                     docker tag codetech-backend:latest $DOCKER_USER/codetech-backend:latest
                     docker tag codetech-client:latest  $DOCKER_USER/codetech-client:latest
@@ -68,19 +67,10 @@ pipeline {
         stage('Deploy Containers') {
             steps {
                 echo "🚀 Deploying application"
-                script {
-                    if (isUnix()) {
-                        sh '''
-                        docker compose down || true
-                        docker compose up -d
-                        '''
-                    } else {
-                        bat '''
-                        docker compose down
-                        docker compose up -d
-                        '''
-                    }
-                }
+                sh '''
+                docker compose down || true
+                docker compose up -d
+                '''
             }
         }
     }
